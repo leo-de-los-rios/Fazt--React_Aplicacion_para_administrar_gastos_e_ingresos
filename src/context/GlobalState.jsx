@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer } from "react";
+import { useContext, useReducer, createContext, useEffect } from "react";
 import AppReducer from "./AppReducer";
 
 const initialState = {
@@ -13,28 +13,44 @@ export const useGlobalState = () => {
 };
 
 export const GlobalProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(AppReducer, initialState);
+  const [state, dispatch] = useReducer(AppReducer, initialState, () => {
+    let initialData = initialState;
 
-  const addTransaction = (transaction) => {
-    dispatch({
-      type: "ADD_TRANSACTION",
-      payload: transaction,
-    });
-  };
+    try {
+      const localData = localStorage.getItem("transactions");
+      initialData = localData ? JSON.parse(localData) : initialState;
+    } catch (error) {
+      console.error(
+        "Error al analizar el JSON almacenado en localStorage:",
+        error
+      );
+      localStorage.removeItem("transactions"); // Eliminar valor no válido
+    }
+    return initialData;
+  });
 
-  const deleteTransaction = (id) => {
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(state));
+  }, [state]);
+
+  const deleteTransaction = (id) =>
     dispatch({
       type: "DELETE_TRANSACTION",
       payload: id,
     });
-  };
+
+  const addTransaction = (transaction) =>
+    dispatch({
+      type: "ADD_TRANSACTION",
+      payload: transaction,
+    });
 
   return (
     <Context.Provider
       value={{
         transactions: state.transactions,
-        addTransaction,
         deleteTransaction,
+        addTransaction,
       }}>
       {children}
     </Context.Provider>

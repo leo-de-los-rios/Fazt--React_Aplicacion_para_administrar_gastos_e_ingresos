@@ -14,7 +14,6 @@ function App() {
       <Balance />
       <TransactionForm />
       <TransactionList />
-      <h1>Hello World</h1>
     </GlobalProvider>
   );
 }
